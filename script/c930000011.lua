@@ -9,8 +9,9 @@ function s.initial_effect(c)
 	e_add_code:SetValue(26976414)
 	c:RegisterEffect(e_add_code)
 	-- =====================================================================
-	--Envoyée au Cimetière comme coût d'un effet de monstre EAU : ajouter ou invoquer 1 monstre de 500 ATK max depuis le Deck
+	--Envoyée au Cimetière comme coût d'un effet de monstre EAU : ajouter ou invoquer 1 monstre de 500 ATK max et Niveau 4 max depuis le Deck
 	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e1:SetProperty(EFFECT_FLAG_DELAY)
@@ -26,7 +27,7 @@ function s.condition(e,tp,eg,ep,ev,re,r,rp)
 		and re:GetHandler():IsAttribute(ATTRIBUTE_WATER)
 end
 function s.filter(c,e,tp)
-	return c:IsMonster() and c:IsAttackBelow(500)
+	return c:IsMonster() and c:IsAttackBelow(500) and c:IsLevelBelow(4)
 		and (c:IsAbleToHand()
 			or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false)))
 end
@@ -43,8 +44,8 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	local b1=tc:IsAbleToHand()
 	local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,false,false)
 	local op=Duel.SelectEffect(tp,
-		{b1,1190},   --Ajouter à la main
-		{b2,1152})   --Invoquer Spécialement
+		{b1,aux.Stringid(id,1)},   --Ajouter à la main (str2)
+		{b2,aux.Stringid(id,2)})   --Invoquer Spécialement (str3)
 	if op==1 then
 		Duel.SendtoHand(tc,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,tc)
