@@ -19,39 +19,36 @@ function s.initial_effect(c)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
 end
-s.fit_monster={id+1}
-function s.filter(c,e,tp,m)
-	local cd=c:GetCode()
-	if cd~=id+1 or not c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_RITUAL,tp,true,false) then return false end
-	if m:IsContains(c) then
-		m:RemoveCard(c)
-		result=m:CheckWithSumGreater(Card.GetRitualLevel,c:GetLevel(),c)
-		m:AddCard(c)
-	else
-		result=m:CheckWithSumGreater(Card.GetRitualLevel,c:GetLevel(),c)
-	end
-	return result
-end
+
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
-		local mg=Duel.GetRitualMaterial(tp)
-		return Duel.IsExistingMatchingCard(s.filter,tp,LOCATION_DECK,0,1,nil,e,tp,mg)
+		-- On vérifie si on a assez de matériel pour le Rituel (Niveau 6)
+		return Duel.IsExistingMatchingCard(Card.IsReleasable,tp,LOCATION_HAND+LOCATION_MZONE,0,1,nil) 
+			and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 	end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,0)
 end
+
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
-	local mg=Duel.GetRitualMaterial(tp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local tg=Duel.SelectMatchingCard(tp,s.filter,tp,LOCATION_DECK,0,1,1,nil,e,tp,mg)
-	if #tg>0 then
-		local tc=tg:GetFirst()
-		mg:RemoveCard(tc)
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RELEASE)
-		local mat=mg:SelectWithSumGreater(tp,Card.GetRitualLevel,tc:GetLevel(),tc)
+	-- On crée le monstre Rituel (Mirror Knight Calling) depuis l'Extérieur du Duel (ID 930000020)
+	local tc = Duel.CreateToken(tp, 930000020)
+	if not tc then return end
+	
+	-- Vérification des matériaux
+	local mg = Duel.GetRitualMaterial(tp)
+	if not mg:CheckWithSumGreater(Card.GetRitualLevel, 6, tc) then return end
+	
+	Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_RELEASE)
+	local mat = mg:SelectWithSumGreater(tp, Card.GetRitualLevel, 6, tc)
+	
+	if #mat > 0 then
 		tc:SetMaterial(mat)
 		Duel.ReleaseRitualMaterial(mat)
 		Duel.BreakEffect()
-		Duel.SpecialSummon(tc,SUMMON_TYPE_RITUAL,tp,tp,true,false,POS_FACEUP)
-		tc:CompleteProcedure()
+		
+		-- Invoque la carte créée
+		if Duel.SpecialSummon(tc, SUMMON_TYPE_RITUAL, tp, tp, true, false, POS_FACEUP) > 0 then
+			tc:CompleteProcedure()
+		end
 	end
 end

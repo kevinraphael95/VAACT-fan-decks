@@ -42,7 +42,7 @@ function s.initial_effect(c)
 	e4:SetTarget(s.dstg)
 	e4:SetOperation(s.dsop)
 	c:RegisterEffect(e4)
-	--Special Summon Aristeros/Dexia
+	--Special Summon Aristeros/Dexia depuis l'Extérieur du Duel
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(62892347,0))
 	e6:SetCategory(CATEGORY_SPECIAL_SUMMON)
@@ -58,7 +58,8 @@ function s.initial_effect(c)
 	e8:SetCode(EVENT_FLIP_SUMMON_SUCCESS)
 	c:RegisterEffect(e8)
 end
-s.listed_names={82103466}
+s.listed_names={82103466, 170000169, 170000168} -- Aristeros et Dexia
+
 function s.statcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local bc=c:GetBattleTarget()
@@ -77,6 +78,7 @@ function s.statop(e,tp,eg,ep,ev,re,r,rp)
 end
 function s.statcon2(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
+	local bc=c:GetBattleTarget()
 	if bc==nil then return false end
 	return bc:GetPosition()==POS_FACEUP_DEFENSE or bc:GetPosition()==POS_FACEDOWN_DEFENSE
 end
@@ -94,9 +96,8 @@ function s.splimit(e,se,sp,st)
 	local code=Duel.GetChainInfo(0,CHAININFO_TRIGGERING_CODE)
 	return se:GetHandler():IsCode(170000166) or code==170000166
 end
-function s.dscon(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.dscon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	local crp=c:GetReasonPlayer()
 	return c:IsReason(REASON_DESTROY) and e:GetHandler():GetPreviousAttackOnField()==0 and Duel.GetLP(tp)>=10000
 end
 function s.filter(c,e,tp)
@@ -117,27 +118,19 @@ function s.dsop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>1 and not Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT)
-		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK|LOCATION_HAND,0,1,nil,e,tp,id+1)
-		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK|LOCATION_HAND,0,1,nil,e,tp,170000169) end
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>1 and not Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_DECK|LOCATION_HAND)
-end
-function s.spfilter(c,e,tp,code)
-	return c:IsCode(code) and c:IsCanBeSpecialSummoned(e,0,tp,true,false)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=1 or Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then return end
-	local g1=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil,e,tp,id+1)
-	local g2=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil,e,tp,170000169)
-	if #g1>0 and #g2>0 then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local sg1=g1:Select(tp,1,1,nil)
-		local tc=sg1:GetFirst()
-		Duel.SpecialSummonStep(tc,0,tp,tp,true,false,POS_FACEUP)
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local sg2=g2:Select(tp,1,1,nil)
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		Duel.SpecialSummonStep(sg2:GetFirst(),0,tp,tp,true,false,POS_FACEUP)
+	-- Création de Dexia (170000168)
+	local tc1=Duel.CreateToken(tp,170000168)
+	-- Création de Aristeros (170000169)
+	local tc2=Duel.CreateToken(tp,170000169)
+	
+	if tc1 and tc2 then
+		Duel.SpecialSummonStep(tc1,0,tp,tp,true,false,POS_FACEUP)
+		Duel.SpecialSummonStep(tc2,0,tp,tp,true,false,POS_FACEUP)
 		Duel.SpecialSummonComplete()
 	end
 end

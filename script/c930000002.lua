@@ -1,5 +1,4 @@
 --Orichalcos Dexia
---By Jackmoonward
 local s,id=GetID()
 function s.initial_effect(c)
 	-- === AJOUT AUTO : considérée comme la carte officielle (ID 170000168) ===
@@ -10,14 +9,16 @@ function s.initial_effect(c)
 	e_add_code:SetValue(170000168)
 	c:RegisterEffect(e_add_code)
 	-- =====================================================================
+	-- Ne peut pas être Invoquée Spécialement d'une autre manière
 	c:EnableReviveLimit()
-	--cannot special summon
 	local e1=Effect.CreateEffect(c)
 	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_SPSUMMON_CONDITION)
+	e1:SetValue(function(e,se,sp,st) return se:GetHandler():IsCode(170000167) end) -- Uniquement par Shunoros
 	c:RegisterEffect(e1)
-	--ATK Increase
+
+	-- ATK augmente pendant le combat
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetCode(EFFECT_SET_ATTACK_FINAL)
@@ -25,7 +26,8 @@ function s.initial_effect(c)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetValue(s.adval)
 	c:RegisterEffect(e2)
-	--Shunoros Debuf
+
+	-- Shunoros perd de l'ATK après le combat
 	local e3=Effect.CreateEffect(c)
 	e3:SetCategory(CATEGORY_REMOVE)
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
@@ -33,7 +35,8 @@ function s.initial_effect(c)
 	e3:SetTarget(s.target)
 	e3:SetOperation(s.operation)
 	c:RegisterEffect(e3)
-	--destroy
+
+	-- Détruite si Shunoros quitte le terrain
 	local e4=Effect.CreateEffect(c)
 	e4:SetType(EFFECT_TYPE_CONTINUOUS+EFFECT_TYPE_FIELD)
 	e4:SetRange(LOCATION_MZONE)
@@ -41,6 +44,8 @@ function s.initial_effect(c)
 	e4:SetCondition(s.descon)
 	e4:SetOperation(s.desop)
 	c:RegisterEffect(e4)
+
+	-- Indestructible tant que Shunoros est là
 	local e5=Effect.CreateEffect(c)
 	e5:SetType(EFFECT_TYPE_SINGLE)
 	e5:SetCode(EFFECT_INDESTRUCTABLE)
@@ -48,9 +53,9 @@ function s.initial_effect(c)
 	e5:SetValue(1)
 	c:RegisterEffect(e5)
 end
-s.listed_names={7634581}
+s.listed_names={170000167} -- Shunoros
 function s.atfilter(c)
-	return c:IsFaceup() and c:IsCode(7634581)
+	return c:IsFaceup() and c:IsCode(170000167)
 end
 function s.atcon(e)
 	return Duel.IsExistingMatchingCard(s.atfilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil)
@@ -60,16 +65,15 @@ function s.adval(e,c)
 	local c=e:GetHandler()
 	local a=Duel.GetAttacker()
 	local d=Duel.GetAttackTarget()
-	if ph==PHASE_DAMAGE_CAL or PHASE_DAMAGE or Duel.IsDamageCalculated() and c:IsRelateToBattle() then
+	if (ph==PHASE_DAMAGE_CAL or ph==PHASE_DAMAGE or Duel.IsDamageCalculated()) and c:IsRelateToBattle() then
 		if a==c and d and d:IsAttackPos() then return d:GetAttack()+300 end
 		if a==c and d and d:IsDefensePos() then return d:GetDefense()+300 end
 		if d==c then return a:GetAttack()+300 end
-		if a~=c and d~=c then return 0 end
 	end
-	if not ph==PHASE_DAMAGE_CAL or not PHASE_DAMAGE or not Duel.IsDamageCalculated() then return 0 end
+	return 0
 end
 function s.filter(c)
-	return c:IsFaceup() and c:IsCode(7634581) and c:GetAttack()~=0
+	return c:IsFaceup() and c:IsCode(170000167) and c:GetAttack()~=0
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(tp) and s.filter(chkc) end
@@ -89,7 +93,7 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.desfilter(c,tp)
-	return c:IsCode(7634581) and c:IsPreviousPosition(POS_FACEUP)
+	return c:IsCode(170000167) and c:IsPreviousPosition(POS_FACEUP)
 end
 function s.descon(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(s.desfilter,1,nil,tp)
