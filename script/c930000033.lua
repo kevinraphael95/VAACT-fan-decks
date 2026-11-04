@@ -22,15 +22,13 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 end
 function s.reccon(e,tp,eg,ep,ev,re,r,rp)
-	-- On vérifie qu'on est bien le joueur qui attaque et que c'est une attaque directe
-	return ep==1-tp and Duel.GetAttackTarget()==nil and Duel.GetBattleDamage(tp)>0
+	return ep~=tp and Duel.GetAttackTarget()==nil
 end
 function s.rectg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local dam=Duel.GetBattleDamage(tp)
-	if chk==0 then return dam>0 end
+	if chk==0 then return true end
 	Duel.SetTargetPlayer(tp)
-	Duel.SetTargetParam(dam)
-	Duel.SetOperationInfo(0,CATEGORY_RECOVER,nil,0,tp,dam)
+	Duel.SetTargetParam(ev)
+	Duel.SetOperationInfo(0,CATEGORY_RECOVER,nil,0,tp,ev)
 end
 function s.recop(e,tp,eg,ep,ev,re,r,rp)
 	local p,d=Duel.GetChainInfo(0,CHAININFO_TARGET_PLAYER,CHAININFO_TARGET_PARAM)
